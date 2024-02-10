@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "matrix_keyboard.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,6 +44,47 @@ TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN PV */
 
+static mk_gpio_t mkColumns[] = {
+	{
+		.GPIO = (uint32_t)KEY_C1_GPIO_Port,
+		.pin = (uint32_t)KEY_C1_Pin
+	},
+	{
+		.GPIO = (uint32_t)KEY_C2_GPIO_Port,
+		.pin = (uint32_t)KEY_C2_Pin
+	},
+	{
+		.GPIO = (uint32_t)KEY_C3_GPIO_Port,
+		.pin = (uint32_t)KEY_C3_Pin
+	},
+	{
+		.GPIO = (uint32_t)KEY_C4_GPIO_Port,
+		.pin = (uint32_t)KEY_C4_Pin
+	}
+};
+static mk_gpio_t mkRows[] = {
+	{
+		.GPIO = (uint32_t)KEY_R1_GPIO_Port,
+		.pin = (uint32_t)KEY_R1_Pin
+	},
+	{
+		.GPIO = (uint32_t)KEY_R2_GPIO_Port,
+		.pin = (uint32_t)KEY_R2_Pin
+	},
+	{
+		.GPIO = (uint32_t)KEY_R3_GPIO_Port,
+		.pin = (uint32_t)KEY_R3_Pin
+	},
+	{
+		.GPIO = (uint32_t)KEY_R4_GPIO_Port,
+		.pin = (uint32_t)KEY_R4_Pin
+	}
+};
+
+mk_t Key4x4;
+
+uint32_t PCol, PRow;
+uint8_t KeyFlag = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -56,6 +97,74 @@ static void MX_TIM2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+// In this example, the Timer 4 was configured to trigger the interrupt
+// every 10 ms
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
+	if (htim->Instance == TIM2){
+		mk_DoOperation(&Key4x4, NULL);
+	}
+}
+
+// The callback of API
+void mk_callback(mk_t *Mk, mk_event_e ev, uint32_t PressedCol, uint32_t PressedRow){
+    if (ev == MK_EVENT_PRESSED){
+        // load the PressedCol and PressedRow on you global variables and
+        // inform the main that a PRESSED event was occoured
+    	PCol = PressedCol;
+    	PRow = PressedRow;
+    }
+    else if (ev == MK_EVENT_RELEASED){
+        // inform the main that the key was released
+    	PCol = 0;
+    	PRow = 0;
+    }
+    KeyFlag = 1;
+}
+
+
+/*
+ * Initialize Modules
+ */
+
+void _init_keypad(){
+	Key4x4.actLevel = MK_ACTIVE_LEVEL_LOW;
+	Key4x4.eventMask = MK_EVENT_ALL;
+	Key4x4.nCols = 4;
+	Key4x4.nRows = 4;
+	Key4x4.gCols = mkColumns;
+	Key4x4.gRows = mkRows;
+
+	if (mk_init(&Key4x4) != MK_STATUS_OK){
+		Error_Handler();
+	}
+
+}
+
+void __init_display(){
+	Lcd.columns = 16;
+	Lcd.rows = 2;
+	Lcd.font = LCD_FONT_5X8;
+	Lcd.interface = LCD_INTERFACE_4BIT;
+	Lcd.gpios[LCD_RS].GPIO = (uint32_t)LCD_RS_GPIO_Port;
+	Lcd.gpios[LCD_RS].pin = LCD_RS_Pin;
+	Lcd.gpios[LCD_E].GPIO = (uint32_t)LCD_E_GPIO_Port;
+	Lcd.gpios[LCD_E].pin = LCD_E_Pin;
+	Lcd.gpios[LCD_D4].GPIO = (uint32_t)LCD_D4_GPIO_Port;
+	Lcd.gpios[LCD_D4].pin = LCD_D4_Pin;
+	Lcd.gpios[LCD_D5].GPIO = (uint32_t)LCD_D5_GPIO_Port;
+	Lcd.gpios[LCD_D5].pin = LCD_D5_Pin;
+	Lcd.gpios[LCD_D6].GPIO = (uint32_t)LCD_D6_GPIO_Port;
+	Lcd.gpios[LCD_D6].pin = LCD_D6_Pin;
+	Lcd.gpios[LCD_D7].GPIO = (uint32_t)LCD_D7_GPIO_Port;
+	Lcd.gpios[LCD_D7].pin = LCD_D7_Pin;
+
+	lcd_init(&Lcd);
+
+	lcd_clear_all(&Lcd);
+
+	lcd_send_string(&Lcd, ">> STM32G431KB");
+}
 
 /* USER CODE END 0 */
 
@@ -89,7 +198,8 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-
+  _init_keypad();
+  HAL_TIM_Base_Start_IT(&htim2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -228,8 +338,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : KEY_R1_Pin KEY_R2_Pin KEY_R3_Pin KEY_R4_Pin */
-  GPIO_InitStruct.Pin = KEY_R1_Pin|KEY_R2_Pin|KEY_R3_Pin|KEY_R4_Pin;
+  /*Configure GPIO pins : KEY_R1_Pin KEY_R3_Pin KEY_R4_Pin */
+  GPIO_InitStruct.Pin = KEY_R1_Pin|KEY_R3_Pin|KEY_R4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -247,6 +357,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : KEY_R2_Pin */
+  GPIO_InitStruct.Pin = KEY_R2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(KEY_R2_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LCD_RS_Pin LCD_E_Pin LCD_D6_Pin */
   GPIO_InitStruct.Pin = LCD_RS_Pin|LCD_E_Pin|LCD_D6_Pin;
