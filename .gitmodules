@@ -1,0 +1,6 @@
+[submodule "libs/matrix-keyboard"]
+	path = libs/matrix-keyboard
+	url = git@github.com:Pablo-Jean/Matrix-Keyboard.git
+[submodule "libs/lcd"]
+	path = libs/lcd
+	url = git@github.com:Pablo-Jean/Matrix-Keyboard.git
