@@ -78,7 +78,7 @@
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Core"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Drivers"/>
-						<entry excluding="lcd/src/mk_platform_blank.c|matrix-keyboard/src/mk_platform_blank.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="libs"/>
+						<entry excluding="lcd/src/platform/platform_stm32f4.c|lcd/src/platform/platform_stm32f1.c|lcd/src/platform/platform_blank.c|lcd/examples|lcd/src/mk_platform_blank.c|matrix-keyboard/src/mk_platform_blank.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="libs"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

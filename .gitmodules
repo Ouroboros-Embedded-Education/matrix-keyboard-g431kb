@@ -3,4 +3,4 @@
 	url = git@github.com:Pablo-Jean/Matrix-Keyboard.git
 [submodule "libs/lcd"]
 	path = libs/lcd
-	url = git@github.com:Pablo-Jean/Matrix-Keyboard.git
+	url = git@github.com:Pablo-Jean/lcd-display.git
